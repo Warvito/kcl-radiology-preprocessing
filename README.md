@@ -80,3 +80,4 @@ nvidia-docker run \
       --stop 5 
 ```
 
+If your docker version have access to GPU, replace the ```nvidia-docker``` command with ```docker```.
