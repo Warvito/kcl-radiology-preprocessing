@@ -69,9 +69,9 @@ nvidia-docker run \
 For example:
 ```shell script
 nvidia-docker run \
-    --volume /media/walter/Storage/Downloads/TEST/my_data/:/data/ \
-    --volume /media/walter/Storage/Downloads/TEST/target/:/target/ \
-    --volume /media/walter/Storage/Downloads/TEST/ids_dir/:/ids_dir/ \
+    --volume /media/walter/Storage/TEST/my_data/:/data/ \
+    --volume /media/walter/Storage/TEST/target/:/target/ \
+    --volume /media/walter/Storage/TEST/ids_dir/:/ids_dir/ \
     --user $(id -u):$(id -g) \
     -it  kcl-radiology-preproc \
       --ids_filename "/ids_dir/ids.json" \
