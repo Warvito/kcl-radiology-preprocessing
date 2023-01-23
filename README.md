@@ -22,34 +22,39 @@ my json file should look like
   "participants": [
     {
       "participant_id": "sub-0001",
-      "ses_id": "ses-01",
+      "session_id": "ses-01",
       "image_paths": [
         "/data/sub-0001/ses-01/anat/sub-0001_ses-01_T1w.nii",
         "/data/sub-0001/ses-01/anat/sub-0001_ses-01_T2w.nii",
         "/data/sub-0001/ses-01/anat/sub-0001_ses-01_FLAIR.nii"
-      ]
+      ],
+      "use_coregistration": true
     },
     {
       "participant_id": "sub-0002",
-      "ses_id": "ses-20220808",
+      "session_id": "ses-20220808",
       "image_paths": [
-        "/data/sub-0002/0002_T2w.nii",
         "/data/sub-0002/0002_T1w.nii"
-      ]
+      ],
+      "use_coregistration": false
     },
     {
       "participant_id": "sub-0003",
-      "ses_id": "ses-01",
+      "session_id": "ses-01",
       "image_paths": [
-        "/data/sub-0003/ses-01/anat/0003_ses-01_T2w.nii",
-        "/data/sub-0003/ses-01/anat/0003_ses-01_T1w.nii"
-      ]
+        "/data/sub-0003/ses-01/anat/0003_ses-01_T1w.nii",
+        "/data/sub-0003/ses-01/anat/0003_ses-01_T2w.nii"
+      ],
+      "use_coregistration": true
     },
     ...
   ]
 }
 ```
-The "participant_id" and "ses_id" fields are used only to create the output directories
+The "participant_id" and "session_id" fields are used only to create the output directories.
+
+**Note**: If use_coregistration is defined as True, the pipeline will use the first image as reference for the 
+coregistration.
 
 ## Executing preprocessing
 To execute preprocessing, use:

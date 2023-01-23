@@ -14,7 +14,9 @@ def parse_args():
 
     parser.add_argument("--start", type=int, help="Starting subject index to process.")
     parser.add_argument("--stop", type=int, help="Stopping subject index to process.")
-    parser.add_argument("--pipeline_name", type=str, default="runpreproc-v1.0", help="Name of the preprocessing pipeline.")
+    parser.add_argument(
+        "--pipeline_name", type=str, default="runpreproc-v1.0", help="Name of the preprocessing pipeline."
+    )
     parser.add_argument("--ids_filename", type=str, default="/ids_dir/ids.json", help="")
     args = parser.parse_args()
 
@@ -24,17 +26,24 @@ def parse_args():
 def run_unires(
     img_path_list: list,
     dir_out: str,
+    use_coregistration: bool,
 ) -> None:
     # Create temporary files with parameters for the pipeline
     with open("/tmp/output_dir.txt", "w") as f:
         f.write(dir_out)
+
+    with open("/tmp/use_coregistration.txt", "w") as f:
+        if use_coregistration:
+            f.write("true")
+        else:
+            f.write("false")
 
     with open("/tmp/input_files.txt", "w") as f:
         for img_path in img_path_list:
             f.write(f"{str(img_path)}\n")
 
     try:
-        command = f"/opt/spm12/spm12 script {'/workspace/src/registration_script.m'}"
+        command = f"/opt/spm12/spm12 script /workspace/src/registration_script.m"
         subprocess.run(command, check=True, stdout=subprocess.PIPE, shell=True)
     except Exception as e:
         print("SPM script registration_script.m failed")
@@ -72,11 +81,16 @@ def main(args):
 
             subject_dir.mkdir(exist_ok=True, parents=True)
 
-            run_unires(scan_session["image_paths"], str(subject_dir))
+            run_unires(
+                img_path_list=scan_session["image_paths"],
+                dir_out=str(subject_dir),
+                use_coregistration=scan_session["use_coregistration"],
+            )
 
         else:
             print("Empty session list!")
     pbar.close()
+
 
 if __name__ == "__main__":
     args = parse_args()

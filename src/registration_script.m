@@ -14,6 +14,13 @@ end
 output_dir = fgetl(fid);
 fclose(fid);
 
+[fid, error_msg] = fopen('/tmp/use_coregistration.txt', 'r');
+if fid == -1
+    error('Could not open /tmp/use_coregistration.txt.\nSystem error message:\n%s\n', error_msg)
+end
+use_coregistration = fgetl(fid);
+fclose(fid);
+
 % Set preprocessing options
 opt = struct;
 opt.do.coreg = false;
@@ -35,8 +42,10 @@ opt.do.res_orig = true;
 
 opt.dir_out = output_dir;
 
-if length(input_image) > 1 && index_of_t1s(k)
+if strcmp(use_coregistration,'true')
     opt_current.do.coreg = true;
+elseif strcmp(use_coregistration,'false')
+    opt_current.do.coreg = false;
 end
 
 RunPreproc(input_image, opt)
