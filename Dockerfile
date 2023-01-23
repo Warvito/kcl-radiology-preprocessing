@@ -1,7 +1,12 @@
-FROM nvcr.io/nvidia/pytorch:21.10-py3
+FROM hdneuro/spm-clinical:20220421
 
-RUN apt-get update \
-  && apt-get install -y wget git python3 python3-pip
+# LD_LIBARY_PATH must be empty to allow Linux and Python updates and installations
+ENV LD_LIBRARY_PATH ""
+
+# Install essentials
+RUN chmod 1777 /tmp \
+ && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
+    libxt6 libxmu6 libxpm4 python3 python3-pip python3-venv ipython3
 
 ARG USER_ID
 ARG GROUP_ID
@@ -9,23 +14,14 @@ ARG USER
 RUN addgroup --gid $GROUP_ID $USER
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USER
 
-RUN pip3 install -U wheel pip pandas tqdm nibabel wget
+# Set up environment variable for MATLAB Runtime. This should be done after installing Linux and Python components.
+ENV MCR_VERSION v910
+ENV LD_LIBRARY_PATH /opt/mcr/${MCR_VERSION}/runtime/glnxa64:/opt/mcr/${MCR_VERSION}/bin/glnxa64:/opt/mcr/${MCR_VERSION}/sys/os/glnxa64:/opt/mcr/${MCR_VERSION}/sys/opengl/lib/glnxa64:/opt/mcr/${MCR_VERSION}/extern/bin/glnxa64
 
-# Clone and compile nitorch
-RUN git clone https://github.com/balbasty/nitorch.git \
-  && cd nitorch \
-  && git reset --hard d30c3125a8a66ea1434f2b39ed03338afd9724b4 \
-  && NI_COMPILED_BACKEND="C" ./setup.py bdist_wheel \
-  && cd dist/ \
-  && pip install nitorch-0.1+100.gd30c312-cp38-cp38-linux_x86_64.whl --no-dependencies
 
-# Install unires and download atlas
-RUN pip3 install git+https://github.com/brudfors/UniRes@fdeee7bb6778fec582847e02de8bac7ff2899dbd \
-  && python3 -c "from nitorch.core.datasets import fetch_data; fetch_data('atlas_t1')"
-
+RUN mkdir -p /workspace/src
+COPY src /workspace/src
 COPY requirements.txt /workspace/requirements.txt
 RUN pip3 install -r /workspace/requirements.txt
 
-COPY ./src /workspace/src
-
-ENTRYPOINT ["python", "/workspace/src/preprocess_image.py"]
+ENTRYPOINT ["python3", "/workspace/src/preprocess_image.py"]
