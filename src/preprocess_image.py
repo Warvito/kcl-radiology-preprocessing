@@ -1,4 +1,5 @@
 """ Wrapper for the preprocessing pipeline """
+from __future__ import annotations
 
 import argparse
 import json
@@ -25,6 +26,7 @@ def parse_args():
 
 def run_unires(
     img_path_list: list,
+    label_path_list: list | None,
     dir_out: str,
     use_coregistration: bool,
 ) -> None:
@@ -38,10 +40,20 @@ def run_unires(
         else:
             f.write("false")
 
-    with open("/tmp/input_files.txt", "w") as f:
+    with open("/tmp/image_files.txt", "w") as f:
         for img_path in img_path_list:
             f.write(f"{str(img_path)}\n")
 
+    with open("/tmp/use_labels.txt", "w") as f:
+        if label_path_list:
+            f.write("true")
+            with open("/tmp/label_files.txt", "w") as f:
+                for label_path in label_path_list:
+                    f.write(f"{str(label_path)}\n")
+        else:
+            f.write("false")
+
+    # Run preprocessing pipeline
     try:
         command = f"/opt/spm12/spm12 script /workspace/src/registration_script.m"
         subprocess.run(command, check=True, stdout=subprocess.PIPE, shell=True)
@@ -81,11 +93,29 @@ def main(args):
 
             subject_dir.mkdir(exist_ok=True, parents=True)
 
+            # check if label in dict
+            if "label_path" not in scan_session:
+                scan_session["label_path"] = None
+
             run_unires(
                 img_path_list=scan_session["image_paths"],
+                label_path_list=scan_session["label_path"],
                 dir_out=str(subject_dir),
                 use_coregistration=scan_session["use_coregistration"],
             )
+
+            # Rename files in subject_dir
+            for file_path in subject_dir.glob("*.nii.gz"):
+                new_name = file_path.name.replace(
+                    file_path.name.split("_")[-1], f"space-IXI549Space_{file_path.name.split('_')[-1]}"
+                )
+                file_path.rename(file_path.parent / new_name)
+            for file_path in subject_dir.glob("*.mat"):
+                new_name = file_path.name.replace("matbbcrro", "")
+                new_name = new_name.replace(
+                    new_name.split("_")[-1], f"space-IXI549Space_{file_path.name.split('_')[-1]}"
+                )
+                file_path.rename(file_path.parent / new_name)
 
         else:
             print("Empty session list!")

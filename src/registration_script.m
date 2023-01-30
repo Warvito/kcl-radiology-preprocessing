@@ -1,10 +1,10 @@
 % Function to preprocess the radiological images using RunPreproc
 
-[fid, error_msg] = fopen('/tmp/input_files.txt', 'r');
+[fid, error_msg] = fopen('/tmp/image_files.txt', 'r');
 if fid == -1
-    error('Could not open /tmp/input_files.txt.\nSystem error message:\n%s\n', error_msg)
+    error('Could not open /tmp/image_files.txt.\nSystem error message:\n%s\n', error_msg)
 end
-input_image = textscan(fid, '%s');
+image_files = textscan(fid, '%s');
 fclose(fid);
 
 [fid, error_msg] = fopen('/tmp/output_dir.txt', 'r');
@@ -20,6 +20,22 @@ if fid == -1
 end
 use_coregistration = fgetl(fid);
 fclose(fid);
+
+[fid, error_msg] = fopen('/tmp/use_labels.txt', 'r');
+if fid == -1
+    error('Could not open /tmp/use_labels.txt.\nSystem error message:\n%s\n', error_msg)
+end
+use_labels = fgetl(fid);
+fclose(fid);
+
+if strcmp(use_labels,'true')
+    [fid, error_msg] = fopen('/tmp/label_files.txt', 'r');
+    if fid == -1
+        error('Could not open /tmp/label_files.txt.\nSystem error message:\n%s\n', error_msg)
+    end
+    label_files = textscan(fid, '%s');
+    fclose(fid);
+end
 
 % Set preprocessing options
 opt = struct;
@@ -39,7 +55,8 @@ opt.do.superres = false;
 opt.do.denoise = false;
 opt.segment.write_df = [0 0];
 opt.do.res_orig = true;
-
+opt.prefix = '';
+opt.do.writemat = true;
 opt.dir_out = output_dir;
 
 if strcmp(use_coregistration,'true')
@@ -48,4 +65,8 @@ elseif strcmp(use_coregistration,'false')
     opt_current.do.coreg = false;
 end
 
-RunPreproc(input_image, opt)
+if strcmp(use_labels,'true')
+    RunPreproc({image_files, label_files}, opt)
+else
+    RunPreproc(image_files, opt)
+end
